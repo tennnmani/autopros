@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AutoShine Admin — Control Panel</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Space+Mono&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#080810;--s1:#0f0f18;--s2:#16161f;--s3:#1e1e28;
+  --border:#252530;--accent:#c8a96e;--accent2:#e8c98e;
+  --green:#00e5a0;--blue:#4cc9f0;--red:#ff4466;
+  --text:#e8e8f0;--muted:#66667a;
+  --heading:'Bebas Neue',sans-serif;--body:'DM Sans',sans-serif;--mono:'Space Mono',monospace;
+}
+body{font-family:var(--body);background:var(--bg);color:var(--text);min-height:100vh;display:grid;grid-template-columns:270px 1fr;grid-template-rows:60px 1fr;height:100vh;overflow:hidden;}
+
+/* TOP BAR */
+.topbar{grid-column:1/-1;background:var(--s1);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;z-index:50;}
+.tl{display:flex;align-items:center;gap:.75rem;}
+.tl-logo{font-family:var(--heading);font-size:1.3rem;letter-spacing:2px;}.tl-logo em{color:var(--accent);font-style:normal;}
+.tl-badge{font-size:.6rem;font-family:var(--mono);background:var(--s3);color:var(--muted);padding:.2rem .5rem;border-radius:3px;letter-spacing:1px;}
+.tr{display:flex;align-items:center;gap:.75rem;}
+.status{display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--muted);}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);}
+.export-btn{background:var(--accent);color:#000;border:none;padding:.45rem 1.2rem;border-radius:4px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:var(--body);display:flex;align-items:center;gap:.4rem;transition:all .15s;}
+.export-btn:hover{background:var(--accent2);transform:translateY(-1px);}
+
+/* SIDEBAR */
+.sidebar{background:var(--s1);border-right:1px solid var(--border);overflow-y:auto;padding:1rem 0;}
+.sb-group{margin-bottom:.25rem;}
+.sb-label{font-size:.6rem;font-family:var(--mono);color:var(--muted);letter-spacing:2px;padding:.6rem 1.2rem .3rem;text-transform:uppercase;}
+.sb-item{display:flex;align-items:center;gap:.65rem;padding:.6rem 1.2rem;cursor:pointer;font-size:.83rem;color:var(--muted);border:none;background:none;width:100%;text-align:left;font-family:var(--body);transition:all .12s;border-left:3px solid transparent;position:relative;}
+.sb-item:hover{background:var(--s2);color:var(--text);}
+.sb-item.active{background:var(--s2);color:var(--text);border-left-color:var(--accent);}
+.sb-icon{width:18px;text-align:center;font-size:.9rem;}
+.sb-count{margin-left:auto;font-size:.65rem;font-family:var(--mono);background:var(--s3);color:var(--muted);padding:.1rem .4rem;border-radius:10px;}
+.sb-divider{height:1px;background:var(--border);margin:.4rem 1.2rem;}
+
+/* MAIN */
+.main{overflow-y:auto;display:flex;flex-direction:column;}
+.panel{display:none;flex:1;flex-direction:column;}
+.panel.active{display:flex;}
+.panel-body{flex:1;padding:2rem;overflow-y:auto;}
+.ph{margin-bottom:1.75rem;}
+.ph h1{font-family:var(--heading);font-size:2rem;letter-spacing:1px;margin-bottom:.2rem;}
+.ph p{font-size:.82rem;color:var(--muted);}
+
+/* CARD */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:1.4rem;margin-bottom:1.1rem;}
+.ct{font-size:.62rem;font-family:var(--mono);color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:1.1rem;display:flex;align-items:center;gap:.5rem;}
+.ct::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent);}
+
+/* FIELDS */
+.f{margin-bottom:.9rem;}
+.f label{display:block;font-size:.7rem;color:var(--muted);margin-bottom:.35rem;font-weight:500;letter-spacing:.5px;}
+.f input,.f select,.f textarea{width:100%;background:var(--s2);border:1px solid var(--border);color:var(--text);padding:.6rem .85rem;border-radius:6px;font-size:.85rem;font-family:var(--body);outline:none;transition:border .15s;}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--accent);}
+.f textarea{resize:vertical;min-height:75px;line-height:1.5;}
+.f select option{background:var(--s2);}
+.f input[type=color]{height:38px;padding:2px 4px;cursor:pointer;}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.85rem;}
+
+/* REPEATABLE ITEMS */
+.rep-item{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:.75rem;position:relative;}
+.rep-del{position:absolute;top:.65rem;right:.65rem;background:none;border:1px solid var(--border);color:var(--muted);width:24px;height:24px;border-radius:5px;cursor:pointer;font-size:.7rem;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.rep-del:hover{background:rgba(255,68,102,.1);border-color:var(--red);color:var(--red);}
+.add-btn{width:100%;background:none;border:1px dashed var(--border);color:var(--muted);padding:.6rem;border-radius:7px;font-size:.82rem;cursor:pointer;font-family:var(--body);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:.4rem;}
+.add-btn:hover{border-color:var(--green);color:var(--green);}
+.rep-label{font-size:.7rem;font-weight:600;color:var(--accent);margin-bottom:.75rem;font-family:var(--mono);letter-spacing:1px;}
+
+/* PHOTO UPLOAD */
+.photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-bottom:.75rem;}
+.photo-slot{aspect-ratio:1;background:var(--s2);border:1px dashed var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;font-size:.65rem;color:var(--muted);}
+.photo-slot:hover{border-color:var(--blue);}
+.photo-slot img{width:100%;height:100%;object-fit:cover;border-radius:7px;}
+.photo-slot.has-img{border-style:solid;border-color:var(--border);}
+.rm-photo{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.75);color:#fff;border:none;border-radius:3px;width:20px;height:20px;font-size:.6rem;cursor:pointer;display:none;align-items:center;justify-content:center;}
+.photo-slot.has-img:hover .rm-photo{display:flex;}
+.ph-add{font-size:1.3rem;color:var(--muted);margin-bottom:.25rem;}
+.ba-2col{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.75rem;}
+.ba-slot{aspect-ratio:4/3;background:var(--s2);border:1px dashed var(--border);border-radius:8px;overflow:hidden;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.65rem;color:var(--muted);transition:border .15s;}
+.ba-slot:hover{border-color:var(--accent);}
+.ba-slot img{width:100%;height:100%;object-fit:cover;}
+.ba-slot-tag{font-size:.6rem;font-family:var(--mono);font-weight:700;letter-spacing:1px;margin-bottom:.25rem;}
+
+/* STARS */
+.star-row{display:flex;gap:.25rem;margin-bottom:.6rem;}
+.star{background:none;border:none;font-size:1.1rem;cursor:pointer;padding:0;line-height:1;transition:transform .1s;}
+.star:hover{transform:scale(1.2);}
+
+/* TOGGLE */
+.tog-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;}
+.tog-row+.tog-row{border-top:1px solid var(--border);}
+.tog-info{}
+.tog-title{font-size:.85rem;}
+.tog-sub{font-size:.72rem;color:var(--muted);}
+.tog{position:relative;width:40px;height:22px;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;}
+.tog-sl{position:absolute;inset:0;background:var(--s3);border-radius:11px;cursor:pointer;transition:.2s;}
+.tog-sl::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:var(--muted);border-radius:50%;transition:.2s;}
+.tog input:checked+.tog-sl{background:var(--green);}
+.tog input:checked+.tog-sl::before{transform:translateX(18px);background:#000;}
+
+/* SAVE BAR */
+.save-bar{background:var(--s1);border-top:1px solid var(--border);padding:.85rem 2rem;display:flex;align-items:center;gap:.75rem;flex-shrink:0;}
+.save-btn{background:var(--green);color:#000;border:none;padding:.55rem 1.5rem;border-radius:6px;font-size:.82rem;font-weight:600;cursor:pointer;font-family:var(--body);transition:all .15s;}
+.save-btn:hover{background:#00cc8a;}
+.save-note{font-size:.72rem;color:var(--muted);margin-left:auto;}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;padding:.65rem 1.1rem;border-radius:7px;font-size:.82rem;font-weight:600;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;}
+.toast.ok{background:var(--green);color:#000;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* PREVIEW FRAME */
+.preview-wrap{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:200;display:none;flex-direction:column;}
+.preview-wrap.open{display:flex;}
+.preview-bar{background:var(--s1);padding:.65rem 1rem;display:flex;align-items:center;gap:.75rem;border-bottom:1px solid var(--border);flex-shrink:0;}
+.preview-bar span{font-size:.8rem;color:var(--muted);flex:1;}
+.close-preview{background:none;border:1px solid var(--border);color:var(--text);padding:.4rem .9rem;border-radius:5px;cursor:pointer;font-size:.8rem;font-family:var(--body);}
+.preview-bar .dl-btn{background:var(--accent);color:#000;border:none;padding:.4rem .9rem;border-radius:5px;cursor:pointer;font-size:.78rem;font-weight:600;font-family:var(--body);}
+iframe{flex:1;border:none;background:#fff;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="tl">
+    <div class="tl-logo">Auto<em>Shine</em></div>
+    <div class="tl-badge">ADMIN PANEL</div>
+  </div>
+  <div class="tr">
+    <div class="status"><span class="dot"></span>Ready to export</div>
+    <button class="export-btn" onclick="doExport()">⬇ Export Website</button>
+    <button class="export-btn" style="background:var(--s3);color:var(--text);" onclick="openPreview()">👁 Preview</button>
+  </div>
+</header>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sb-group">
+    <div class="sb-label">Content</div>
+    <button class="sb-item active" onclick="show('general',this)"><span class="sb-icon">⚙</span>General & Hero</button>
+    <button class="sb-item" onclick="show('services',this)"><span class="sb-icon">🔧</span>Services<span class="sb-count" id="cnt-s">6</span></button>
+    <button class="sb-item" onclick="show('ba',this)"><span class="sb-icon">↔</span>Before & After<span class="sb-count" id="cnt-ba">3</span></button>
+    <button class="sb-item" onclick="show('gallery',this)"><span class="sb-icon">🖼</span>Gallery<span class="sb-count" id="cnt-g">0</span></button>
+    <button class="sb-item" onclick="show('band',this)"><span class="sb-icon">📸</span>Photo Strip</button>
+    <button class="sb-item" onclick="show('reviews',this)"><span class="sb-icon">★</span>Reviews<span class="sb-count" id="cnt-r">3</span></button>
+  </div>
+  <div class="sb-divider"></div>
+  <div class="sb-group">
+    <div class="sb-label">Appearance</div>
+    <button class="sb-item" onclick="show('branding',this)"><span class="sb-icon">🎨</span>Colors & Branding</button>
+    <button class="sb-item" onclick="show('about',this)"><span class="sb-icon">🏢</span>About Section</button>
+  </div>
+  <div class="sb-divider"></div>
+  <div class="sb-group">
+    <div class="sb-label">Settings</div>
+    <button class="sb-item" onclick="show('contact',this)"><span class="sb-icon">📞</span>Contact & Hours</button>
+    <button class="sb-item" onclick="show('seo',this)"><span class="sb-icon">🔍</span>SEO & Features</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- GENERAL & HERO -->
+  <div class="panel active" id="p-general">
+    <div class="panel-body">
+      <div class="ph"><h1>General & Hero</h1><p>Business name, hero headlines and stats</p></div>
+      <div class="card">
+        <div class="ct">Business Identity</div>
+        <div class="r3">
+          <div class="f"><label>Business Name</label><input id="g-name" value="AutoShine Nepal"/></div>
+          <div class="f"><label>Logo Part 1 (normal)</label><input id="g-lp1" value="Auto"/></div>
+          <div class="f"><label>Logo Part 2 (gold)</label><input id="g-lp2" value="Shine"/></div>
+        </div>
+        <div class="r2">
+          <div class="f"><label>Page Tagline (browser tab)</label><input id="g-tagline" value="Professional Car Detailing in Kathmandu"/></div>
+          <div class="f"><label>Footer Tagline</label><input id="g-footer-tagline" value="Nepal's trusted auto detailing specialists. We restore and protect your vehicle to showroom perfection."/></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">Hero Section</div>
+        <div class="f"><label>Eyebrow Text (small label above headline)</label><input id="h-eyebrow" value="Kathmandu's Premier Detailing Studio"/></div>
+        <div class="r2">
+          <div class="f"><label>Headline Line 1</label><input id="h-l1" value="Your Car."/></div>
+          <div class="f"><label>Headline Line 2 (shown in gold)</label><input id="h-l2" value="Our Obsession."/></div>
+        </div>
+        <div class="f"><label>Sub-description</label><textarea id="h-sub">Professional auto detailing, paint correction, ceramic coatings & more. We restore and protect your vehicle to showroom perfection.</textarea></div>
+        <div class="r2">
+          <div class="f"><label>Primary Button Text</label><input id="h-cta1" value="Book Appointment"/></div>
+          <div class="f"><label>Secondary Button Text</label><input id="h-cta2" value="View Our Work"/></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">Hero Stats (bottom right)</div>
+        <div class="r3">
+          <div class="f"><label>Stat 1 Number</label><input id="st1n" value="500+"/></div>
+          <div class="f"><label>Stat 1 Label</label><input id="st1l" value="Cars Detailed"/></div>
+        </div>
+        <div class="r3">
+          <div class="f"><label>Stat 2 Number</label><input id="st2n" value="5★"/></div>
+          <div class="f"><label>Stat 2 Label</label><input id="st2l" value="Avg Rating"/></div>
+        </div>
+        <div class="r3">
+          <div class="f"><label>Stat 3 Number</label><input id="st3n" value="3yr"/></div>
+          <div class="f"><label>Stat 3 Label</label><input id="st3l" value="Experience"/></div>
+        </div>
+      </div>
+    </div>
+    <div class="save-bar"><button class="save-btn" onclick="saveAll()">Save Changes</button><span class="save-note">Export to apply changes to the website</span></div>
+  </div>
+
+  <!-- SERVICES -->
+  <div class="panel" id="p-services">
+    <div class="panel-body">
+      <div class="ph"><h1>Services</h1><p>Add, edit or remove the services shown on your website</p></div>
+      <div class="card">
+        <div class="ct">Service Packages</div>
+        <div id="services-editor"></div>
+        <button class="add-btn" onclick="addService()">+ Add New Service</button>
+      </div>
+    </div>
+    <div class="save-bar"><button class="save-btn" onclick="saveAll()">Save Changes</button><span class="save-note">Export to apply</span></div>
+  </div>
+
+  <!-- BEFORE/AFTER -->
+  <div class="panel" id="p-ba">
+    <div class="panel-body">
+      <div class="ph"><h1>Before & After</h1><p>Upload transformation photos to show your real work</p></div>
+      <div class="card">
+        <div class="ct">Before & After Sets</div>
+        <div id="ba-editor"></div>
+        <button class="add-btn" onclick="addBA()">+ Add New Set</button>
+      </div>
+    </div>
+    <div class="save-bar"><button class="save-btn" onclick="saveAll()">Save Changes</button><span class="save-note">Photos embed into the HTML file</span></div>
+  </div>
+
+  <!-- GALLERY -->
+  <div class="panel" id="p-gallery">
+    <div class="panel-body">
+      <div class="ph"><h1>Gallery</h1><p>Showcase photos of your finished work</p></div>
+      <div class="card">
+        <div class="ct">Gallery Photos</div>
+        <div class="photo-grid" id="gallery-grid-admin"></div>
+        <button class="add-btn" onclick="document.getElementById('gal-upload').click()">+ Upload Photos</button>
+        <input type="file" id="gal-upload" accept="image/*" multiple onchange="handleGallery(event)"/>
+      </div>
+    </div>
+    <div class="save-bar"><button class="save-btn" onclick="saveAll()">Save Changes</button><span class="save-note">Photos embed into HTML</span></div>
+  </div>
+
+  <!-- PHOTO BAND -->
+  <div class="panel" id="p-band">
+    <div class="panel-body">
+      <div class="ph"><h1>Photo Strip</h1><p>6 photos that appear in the horizontal band between gallery and reviews</p></div>
+      <div class="card">
+        <div class="ct">Strip Photos (6 slots)</div>
+        <div class="photo-grid" id="band-grid" style="grid-template-columns:repeat(3,1fr)"></div>
+        <button class="add-btn" onclick="document.getElementById('band-upload').click()">+ Upload Strip Photos</button>
+        <input type="file" id="band-upload" accept="image/*" multiple onchange="handleBand(event)"/>
+      </div>
+    </div>
+    <div class="save-bar"><button class="save-btn" onclick="saveAll()">Save Changes</button><span class="save-note">Photos embed into HTML</span></div>
+  </div>
+
+  <!-- REVIEWS -->
+  <div class="panel" id="p-reviews">
+    <div class="panel-body">
+      <div class="ph"><h1>Customer Reviews</h1><p>Manage testimonials shown on your website</p></div>
+      <div class="card">
+        <div class="ct">Testimonials</div>
+        <div id="reviews-editor"></div>
+        <button class="add-btn" onclick="addReview()">+ Add New Review</button>
+      </div>
+    </div>
+    <div class="save-bar"><button class="save-btn" onclick="saveAll()">Save Changes</button><span class="save-note">Export to apply</span></div>
+  </div>
+
+  <!-- BRANDING -->
+  <div class="panel" id="p-branding">
+    <div class="panel-body">
+      <div class="ph"><h1>Colors & Branding</h1><p>Customize your website's visual style</p></div>
+      <div class="card">
+        <div class="ct">Color Scheme</div>
+        <div class="r3">
+          <div class="f"><label>Gold / Accent Color</label><input type="color" id="c-accent" value="#c8a96e"/></div>
+          <div class="f"><label>Background Color</label><input type="color" id="c-bg" value="#0a0a0a"/></div>
+          <div class="f"><label>CTA Band Color</label><input type="color" id="c-cta" value="#c8a96e"/></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">Service Tiles (Hero shortcuts)</div>
+        <div id="tiles-editor"></div>
+      </div>
+    </div>
+    <div class="save-bar"><button class="save-btn" onclick="saveAll()">Save Changes</button><span class="save-note">Export to apply</span></div>
+  </div>
+
+  <!-- ABOUT -->
+  <div class="panel" id="p-about">
+    <div class="panel-body">
+      <div class="ph"><h1>About Section</h1><p>The split section that describes your shop</p></div>
+      <div class="card">
+        <div class="ct">About Text</div>
+        <div class="f"><label>Section Heading</label><input id="ab-title" value="Built On A Passion For Perfection"/></div>
+        <div class="f"><label>Paragraph 1</label><textarea id="ab-p1">Founded with an unquenchable desire for automotive excellence, AutoShine Nepal is Kathmandu's trusted name in professional vehicle detailing and paint protection.</textarea></div>
+        <div class="f"><label>Paragraph 2</label><textarea id="ab-p2">Whether you drive a daily commuter or a prized weekend machine, we treat every car with the same obsessive attention to detail.</textarea></div>
+        <div class="f"><label>CTA Button Text</label><input id="ab-cta" value="Get A Free Estimate"/></div>
+      </div>
+      <div class="card">
+        <div class="ct">About Section Photo</div>
+        <div id="about-photo-wrap">
+          <div class="photo-slot" id="about-photo-slot" onclick="document.getElementById('about-upload').click()" style="max-width:360px;aspect-ratio:3/4;">
+            <div class="ph-add">+</div><div>Upload Shop Photo</div>
+          </div>
+        </div>
+        <input type="file" id="about-upload" accept="image/*" onchange="handleAboutPhoto(event)"/>
+      </div>
+    </div>
+    <div class="save-bar"><button class="save-btn" onclick="saveAll()">Save Changes</button><span class="save-note">Export to apply</span></div>
+  </div>
+
+  <!-- CONTACT -->
+  <div class="panel" id="p-contact">
+    <div class="panel-body">
+      <div class="ph"><h1>Contact & Hours</h1><p>All contact info shown in the booking section and footer</p></div>
+      <div class="card">
+        <div class="ct">Contact Details</div>
+        <div class="f"><label>Shop Address</label><input id="ct-addr" value="Your Shop Address, Kathmandu, Nepal"/></div>
+        <div class="r2">
+          <div class="f"><label>Phone / WhatsApp / Viber</label><input id="ct-phone" value="+977-XXXXXXXXXX"/></div>
+          <div class="f"><label>Email</label><input id="ct-email" value="info@autoshine.np"/></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">Working Hours</div>
+        <div class="r2">
+          <div class="f"><label>Sunday – Friday</label><input id="ct-wd" value="8:00 AM – 6:00 PM"/></div>
+          <div class="f"><label>Saturday</label><input id="ct-sat" value="9:00 AM – 4:00 PM"/></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">Payment Methods</div>
+        <div class="f"><label>Accepted Payments (comma separated)</label><input id="ct-pay" value="Cash, eSewa, Khalti, Bank Transfer"/></div>
+      </div>
+      <div class="card">
+        <div class="ct">Social Media Links</div>
+        <div class="r3">
+          <div class="f"><label>Facebook URL</label><input id="ct-fb" placeholder="https://facebook.com/..."/></div>
+          <div class="f"><label>Instagram URL</label><input id="ct-ig" placeholder="https://instagram.com/..."/></div>
+          <div class="f"><label>TikTok URL</label><input id="ct-tt" placeholder="https://tiktok.com/@..."/></div>
+        </div>
+      </div>
+    </div>
+    <div class="save-bar"><button class="save-btn" onclick="saveAll()">Save Changes</button><span class="save-note">Export to apply</span></div>
+  </div>
+
+  <!-- SEO -->
+  <div class="panel" id="p-seo">
+    <div class="panel-body">
+      <div class="ph"><h1>SEO & Features</h1><p>Google visibility and website features</p></div>
+      <div class="card">
+        <div class="ct">Search Engine</div>
+        <div class="f"><label>Page Title (shown in Google)</label><input id="seo-t" value="AutoShine Nepal – Professional Car Detailing in Kathmandu"/></div>
+        <div class="f"><label>Meta Description</label><textarea id="seo-d">AutoShine Nepal offers professional car detailing, paint correction, ceramic coating, and interior deep cleaning in Kathmandu. Book today!</textarea></div>
+        <div class="f"><label>Keywords (comma separated)</label><input id="seo-k" value="car detailing Nepal, auto detailing Kathmandu, ceramic coating Nepal"/></div>
+      </div>
+      <div class="card">
+        <div class="ct">Features</div>
+        <div class="tog-row"><div class="tog-info"><div class="tog-title">WhatsApp floating button</div><div class="tog-sub">Lets customers message you directly</div></div><label class="tog"><input type="checkbox" id="feat-wa" checked/><span class="tog-sl"></span></label></div>
+        <div class="tog-row"><div class="tog-info"><div class="tog-title">Show booking form</div><div class="tog-sub">Allow customers to book from the website</div></div><label class="tog"><input type="checkbox" id="feat-booking" checked/><span class="tog-sl"></span></label></div>
+        <div class="tog-row"><div class="tog-info"><div class="tog-title">Show hero statistics</div><div class="tog-sub">Cars detailed, rating, experience numbers</div></div><label class="tog"><input type="checkbox" id="feat-stats" checked/><span class="tog-sl"></span></label></div>
+      </div>
+    </div>
+    <div class="save-bar"><button class="save-btn" onclick="saveAll()">Save Changes</button><span class="save-note">Export to apply</span></div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="ba-file-input" accept="image/*" style="display:none"/>
+
+<!-- PREVIEW -->
+<div class="preview-wrap" id="preview-wrap">
+  <div class="preview-bar">
+    <span>Live Preview — AutoShine Nepal Website</span>
+    <button class="dl-btn" onclick="doExport()">⬇ Export</button>
+    <button class="close-preview" onclick="closePreview()">✕ Close Preview</button>
+  </div>
+  <iframe id="preview-iframe"></iframe>
+</div>
+
+<script>
+// ---- DATA ----
+const D = {
+  services:[
+    {icon:'🚿',title:'Exterior Wash & Polish',desc:'Full exterior wash, clay bar treatment, machine polish to remove swirls and scratches.',price:'From Rs. 1,500'},
+    {icon:'🪑',title:'Interior Deep Clean',desc:'Vacuuming, steam cleaning, dashboard detailing, leather conditioning, odor removal.',price:'From Rs. 1,800'},
+    {icon:'✨',title:'Full Detail Package',desc:'Our signature complete inside-out detailing for a showroom-perfect finish.',price:'From Rs. 3,000'},
+    {icon:'🛡️',title:'Paint Protection (Ceramic)',desc:'Ceramic coating and paint sealant to protect your car\'s finish for years.',price:'From Rs. 5,000'},
+    {icon:'🪟',title:'Glass Treatment',desc:'Window tinting, glass polish, water repellent coating for clear monsoon visibility.',price:'From Rs. 800'},
+    {icon:'🚙',title:'Engine Bay Clean',desc:'Safe degreasing and detailing of the engine bay for maintenance and resale value.',price:'From Rs. 1,200'}
+  ],
+  ba:[
+    {title:'Exterior Polish & Paint Correction',desc:'Deep swirl removal and machine polish on a Hyundai Creta.',before:null,after:null},
+    {title:'Interior Deep Clean',desc:'Full interior steam clean on a Toyota Fortuner.',before:null,after:null},
+    {title:'Full Detail — SUV Package',desc:'Complete inside-out detail on a Mahindra Thar.',before:null,after:null}
+  ],
+  gallery:[],band:[],aboutPhoto:null,
+  reviews:[
+    {name:'Rajesh Karmacharya',meta:'Toyota RAV4 · Lalitpur',text:'Absolutely incredible work! My car looks brand new. Highly recommend AutoShine to everyone.',stars:5,color:'#1565c0'},
+    {name:'Sunita Pandey',meta:'Honda City · Bhaktapur',text:'Got the full detail before selling my car. The buyer paid above asking price! Worth every rupee.',stars:5,color:'#2e7d32'},
+    {name:'Bikash Thapa',meta:'Hyundai Tucson · Kathmandu',text:'Great service at fair price. Paint correction on my black car is stunning — no more swirl marks.',stars:4,color:'#6a1b9a'}
+  ]
+};
+
+// ---- NAV ----
+function show(id,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('p-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+// ---- SERVICES ----
+function renderServices(){
+  document.getElementById('services-editor').innerHTML = D.services.map((s,i)=>`
+    <div class="rep-item">
+      <button class="rep-del" onclick="D.services.splice(${i},1);renderServices()">✕</button>
+      <div class="r3">
+        <div class="f"><label>Icon</label><input value="${s.icon}" oninput="D.services[${i}].icon=this.value"/></div>
+        <div class="f" style="grid-column:span 2"><label>Service Name</label><input value="${s.title}" oninput="D.services[${i}].title=this.value"/></div>
+      </div>
+      <div class="f"><label>Description</label><textarea oninput="D.services[${i}].desc=this.value">${s.desc}</textarea></div>
+      <div class="f"><label>Starting Price</label><input value="${s.price}" oninput="D.services[${i}].price=this.value"/></div>
+    </div>`).join('');
+  document.getElementById('cnt-s').textContent = D.services.length;
+}
+function addService(){D.services.push({icon:'🔧',title:'New Service',desc:'Describe this service.',price:'From Rs. 0'});renderServices();}
+
+// ---- TILES ----
+function renderTiles(){
+  const tiles = [
+    {num:'01',title:'Exterior Detail'},{num:'02',title:'Ceramic Coating'},
+    {num:'03',title:'Interior Clean'},{num:'04',title:'Book Now'}
+  ];
+  document.getElementById('tiles-editor').innerHTML = '<div class="r2">' + tiles.map((t,i)=>`
+    <div class="f"><label>Tile ${i+1} Text</label><input id="tile-${i}" value="${t.title}"/></div>`).join('') + '</div>';
+}
+
+// ---- BEFORE/AFTER ----
+function renderBA(){
+  document.getElementById('ba-editor').innerHTML = D.ba.map((ba,i)=>`
+    <div class="rep-item">
+      <div class="rep-label">Set ${i+1}</div>
+      <button class="rep-del" onclick="D.ba.splice(${i},1);renderBA()">✕</button>
+      <div class="ba-2col">
+        <div class="ba-slot ${ba.before?'has-img':''}" onclick="trigBA(${i},'before')">
+          ${ba.before?`<img src="${ba.before}"/><button class="rm-photo" onclick="event.stopPropagation();D.ba[${i}].before=null;renderBA()">✕</button>`:`<div class="ba-slot-tag">BEFORE</div><div style="font-size:.7rem">Click to upload</div>`}
+        </div>
+        <div class="ba-slot ${ba.after?'has-img':''}" onclick="trigBA(${i},'after')">
+          ${ba.after?`<img src="${ba.after}"/><button class="rm-photo" onclick="event.stopPropagation();D.ba[${i}].after=null;renderBA()">✕</button>`:`<div class="ba-slot-tag">AFTER</div><div style="font-size:.7rem">Click to upload</div>`}
+        </div>
+      </div>
+      <div class="f"><label>Title</label><input value="${ba.title}" oninput="D.ba[${i}].title=this.value"/></div>
+      <div class="f"><label>Description</label><textarea oninput="D.ba[${i}].desc=this.value">${ba.desc}</textarea></div>
+    </div>`).join('');
+  document.getElementById('cnt-ba').textContent = D.ba.length;
+}
+let baT=null;
+function trigBA(i,side){baT={i,side};document.getElementById('ba-file-input').click();}
+document.getElementById('ba-file-input').addEventListener('change',function(e){
+  if(!e.target.files[0]||!baT)return;
+  const r=new FileReader();
+  r.onload=ev=>{D.ba[baT.i][baT.side]=ev.target.result;renderBA();baT=null;};
+  r.readAsDataURL(e.target.files[0]);this.value='';
+});
+function addBA(){D.ba.push({title:'New Set',desc:'Describe this transformation.',before:null,after:null});renderBA();}
+
+// ---- GALLERY ----
+function renderGallery(){
+  const g=document.getElementById('gallery-grid-admin');
+  g.innerHTML = D.gallery.map((src,i)=>`
+    <div class="photo-slot has-img">
+      <img src="${src}"/>
+      <button class="rm-photo" onclick="D.gallery.splice(${i},1);renderGallery()">✕</button>
+    </div>`).join('')+`<div class="photo-slot" onclick="document.getElementById('gal-upload').click()"><div class="ph-add">+</div><div>Add</div></div>`;
+  document.getElementById('cnt-g').textContent = D.gallery.length;
+}
+function handleGallery(e){
+  Array.from(e.target.files).forEach(f=>{const r=new FileReader();r.onload=ev=>{D.gallery.push(ev.target.result);renderGallery();};r.readAsDataURL(f);});
+  e.target.value='';
+}
+
+// ---- BAND ----
+function renderBand(){
+  const g=document.getElementById('band-grid');
+  const slots=6;
+  g.innerHTML=Array(slots).fill(0).map((_,i)=>{
+    const src=D.band[i];
+    return src?`<div class="photo-slot has-img"><img src="${src}"/><button class="rm-photo" onclick="D.band[${i}]=null;renderBand()">✕</button></div>`
+              :`<div class="photo-slot" onclick="trigBand(${i})"><div class="ph-add">+</div><div>Slot ${i+1}</div></div>`;
+  }).join('');
+}
+let bandSlot=null;
+function trigBand(i){bandSlot=i;document.getElementById('band-upload').click();}
+document.getElementById('band-upload').addEventListener('change',function(e){
+  if(!e.target.files[0])return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    if(bandSlot!==null){while(D.band.length<=bandSlot)D.band.push(null);D.band[bandSlot]=ev.target.result;}
+    else D.band.push(ev.target.result);
+    renderBand();bandSlot=null;
+  };
+  r.readAsDataURL(e.target.files[0]);this.value='';
+});
+
+// ---- ABOUT PHOTO ----
+function handleAboutPhoto(e){
+  if(!e.target.files[0])return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    D.aboutPhoto=ev.target.result;
+    const slot=document.getElementById('about-photo-slot');
+    slot.innerHTML=`<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:7px;"/><button class="rm-photo" onclick="D.aboutPhoto=null;renderAboutPhoto()" style="display:flex">✕</button>`;
+    slot.classList.add('has-img');
+  };
+  r.readAsDataURL(e.target.files[0]);e.target.value='';
+}
+function renderAboutPhoto(){
+  const slot=document.getElementById('about-photo-slot');
+  slot.classList.remove('has-img');
+  slot.innerHTML='<div class="ph-add">+</div><div>Upload Shop Photo</div>';
+  slot.onclick=()=>document.getElementById('about-upload').click();
+}
+
+// ---- REVIEWS ----
+function renderReviews(){
+  document.getElementById('reviews-editor').innerHTML = D.reviews.map((rv,i)=>`
+    <div class="rep-item">
+      <button class="rep-del" onclick="D.reviews.splice(${i},1);renderReviews()">✕</button>
+      <div class="star-row">${[1,2,3,4,5].map(s=>`<button class="star" onclick="D.reviews[${i}].stars=${s};renderReviews()">${s<=rv.stars?'★':'☆'}</button>`).join('')}</div>
+      <div class="f"><label>Review Text</label><textarea oninput="D.reviews[${i}].text=this.value">${rv.text}</textarea></div>
+      <div class="r3">
+        <div class="f"><label>Name</label><input value="${rv.name}" oninput="D.reviews[${i}].name=this.value"/></div>
+        <div class="f"><label>Sub (car & city)</label><input value="${rv.meta}" oninput="D.reviews[${i}].meta=this.value"/></div>
+        <div class="f"><label>Avatar Color</label><input type="color" value="${rv.color}" oninput="D.reviews[${i}].color=this.value"/></div>
+      </div>
+    </div>`).join('');
+  document.getElementById('cnt-r').textContent = D.reviews.length;
+}
+function addReview(){D.reviews.push({name:'Customer Name',meta:'Car · City',text:'Write the review here.',stars:5,color:'#1565c0'});renderReviews();}
+
+// ---- SAVE / TOAST ----
+function saveAll(){toast('✓ Changes saved','ok');}
+function toast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className=`toast ${type} show`;
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ---- COLLECT DATA ----
+function collectData(){
+  return {
+    name:document.getElementById('g-name').value,
+    logoPart1:document.getElementById('g-lp1').value,
+    logoPart2:document.getElementById('g-lp2').value,
+    tagline:document.getElementById('g-tagline').value,
+    footerTagline:document.getElementById('g-footer-tagline').value,
+    heroEyebrow:document.getElementById('h-eyebrow').value,
+    heroLine1:document.getElementById('h-l1').value,
+    heroLine2:document.getElementById('h-l2').value,
+    heroSub:document.getElementById('h-sub').value,
+    ctaPrimary:document.getElementById('h-cta1').value,
+    ctaSecondary:document.getElementById('h-cta2').value,
+    stat1Num:document.getElementById('st1n').value,stat1Label:document.getElementById('st1l').value,
+    stat2Num:document.getElementById('st2n').value,stat2Label:document.getElementById('st2l').value,
+    stat3Num:document.getElementById('st3n').value,stat3Label:document.getElementById('st3l').value,
+    aboutTitle:document.getElementById('ab-title').value,
+    aboutP1:document.getElementById('ab-p1').value,
+    aboutP2:document.getElementById('ab-p2').value,
+    aboutCta:document.getElementById('ab-cta').value,
+    aboutPhoto:D.aboutPhoto,
+    phone:document.getElementById('ct-phone').value,
+    email:document.getElementById('ct-email').value,
+    address:document.getElementById('ct-addr').value,
+    weekday:document.getElementById('ct-wd').value,
+    saturday:document.getElementById('ct-sat').value,
+    payment:document.getElementById('ct-pay').value,
+    fbUrl:document.getElementById('ct-fb').value||'#',
+    igUrl:document.getElementById('ct-ig').value||'#',
+    ttUrl:document.getElementById('ct-tt').value||'#',
+    primaryColor:document.getElementById('c-accent').value,
+    showWA:document.getElementById('feat-wa').checked,
+    showBooking:document.getElementById('feat-booking').checked,
+    showStats:document.getElementById('feat-stats').checked,
+    seoTitle:document.getElementById('seo-t').value,
+    seoDesc:document.getElementById('seo-d').value,
+    seoKw:document.getElementById('seo-k').value,
+    services:D.services,
+    beforeAfter:D.ba,
+    gallery:D.gallery,
+    photoBand:D.band,
+    reviews:D.reviews
+  };
+}
+
+// ---- GENERATE HTML ----
+function generateHTML(S){
+  const waNum=S.phone.replace(/[^0-9]/g,'');
+  const servicesHTML=S.services.map(s=>`
+    <div class="service-block">
+      <div class="service-block-icon">${s.icon}</div>
+      <div class="service-block-title">${s.title}</div>
+      <div class="service-block-desc">${s.desc}</div>
+      <div class="service-block-price">${s.price}</div>
+      <div class="service-block-link">Learn More →</div>
+    </div>`).join('');
+  const baHTML=S.beforeAfter.map(ba=>`
+    <div class="ba-card">
+      <div class="ba-photos">
+        <div class="ba-photo">
+          ${ba.before?`<img src="${ba.before}" alt="Before"/>`:`<div class="ba-placeholder ba-ph-before"><div style="font-size:2rem;opacity:.2;margin-bottom:.3rem">📷</div>BEFORE</div>`}
+          <div class="ba-tag ba-tag-before">BEFORE</div>
+        </div>
+        <div class="ba-photo">
+          ${ba.after?`<img src="${ba.after}" alt="After"/>`:`<div class="ba-placeholder ba-ph-after"><div style="font-size:2rem;opacity:.2;margin-bottom:.3rem">✨</div>AFTER</div>`}
+          <div class="ba-tag ba-tag-after">AFTER</div>
+        </div>
+      </div>
+      <div class="ba-info"><h4>${ba.title}</h4><p>${ba.desc}</p></div>
+    </div>`).join('');
+  const galleryHTML=S.gallery.length?S.gallery.map((src,i)=>`<div class="gallery-item${i===0?' wide':i===3?' tall':''}"><img src="${src}" alt="Gallery"/></div>`).join(''):Array(9).fill(0).map((_,i)=>`<div class="gallery-item${i===0?' wide':i===3?' tall':''}"><div class="gallery-placeholder">Add Photo ${i+1}</div></div>`).join('');
+  const bandHTML=Array(6).fill(0).map((_,i)=>{const s=S.photoBand&&S.photoBand[i];return s?`<div class="photo-band-item"><img src="${s}"/></div>`:`<div class="photo-band-placeholder"></div>`;}).join('');
+  const reviewsHTML=S.reviews.map(r=>`
+    <div class="review-card">
+      <div class="review-quote">"</div>
+      <div class="review-stars">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div>
+      <div class="review-text">${r.text}</div>
+      <div class="reviewer-row">
+        <div class="reviewer-ava" style="background:${r.color}">${r.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+        <div><div class="reviewer-name">${r.name}</div><div class="reviewer-meta">${r.meta}</div></div>
+      </div>
+    </div>`).join('');
+  const aboutImgHTML=S.aboutPhoto?`<img src="${S.aboutPhoto}" alt="About AutoShine" style="width:100%;height:100%;object-fit:cover;opacity:.85;"/>`:`<div class="about-image-placeholder"><div class="big-icon">🚗</div><span>ADD YOUR SHOP PHOTO</span></div>`;
+  const waWidget=S.showWA?`<a class="wa-float" href="https://wa.me/${waNum}" target="_blank" title="Chat on WhatsApp">💬</a>`:'';
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>${S.seoTitle||S.name}</title>
+<meta name="description" content="${S.seoDesc}"/>
+<meta name="keywords" content="${S.seoKw}"/>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--primary:${S.primaryColor};--bg:${S.bgColor||'#0a0a0a'};--secondary:#111111;--accent:${S.primaryColor};--accent2:#e8c98e;--white:#ffffff;--muted:#888;--border:#222;--heading:'Bebas Neue',sans-serif;--body:'Montserrat',sans-serif;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--body);background:var(--bg);color:#fff;overflow-x:hidden;}
+a{text-decoration:none;color:inherit;}
+.topbar{background:#050505;padding:.5rem 3rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1a1a1a;font-size:.78rem;}
+.topbar-left{color:#888;display:flex;gap:2rem;}.topbar-left a{color:#888;transition:color .2s;}.topbar-left a:hover{color:var(--accent);}
+.topbar-right{display:flex;gap:.5rem;}
+.topbar-social{width:26px;height:26px;border:1px solid #333;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#666;transition:all .2s;}.topbar-social:hover{border-color:var(--accent);color:var(--accent);}
+nav{background:rgba(8,8,8,.97);backdrop-filter:blur(10px);padding:0 3rem;display:flex;justify-content:space-between;align-items:center;height:72px;position:sticky;top:0;z-index:100;border-bottom:1px solid #1a1a1a;}
+.nav-logo{font-family:var(--heading);font-size:1.8rem;letter-spacing:2px;}.nav-logo span{color:var(--accent);}
+.nav-links{display:flex;gap:2rem;list-style:none;align-items:center;}.nav-links a{font-size:.78rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#bbb;transition:color .2s;padding:.25rem 0;border-bottom:2px solid transparent;}.nav-links a:hover{color:#fff;border-bottom-color:var(--accent);}
+.nav-book{background:var(--accent)!important;color:#000!important;padding:.55rem 1.5rem!important;border-radius:3px!important;border-bottom:none!important;font-weight:700!important;}.nav-book:hover{opacity:.9!important;}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:.25rem;}.hamburger span{width:24px;height:2px;background:#fff;border-radius:2px;}
+.hero{position:relative;height:92vh;min-height:580px;display:flex;align-items:center;overflow:hidden;}
+.hero-bg{position:absolute;inset:0;background:linear-gradient(135deg,#000,#0d0d0d 40%,#1a1208);}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,.85) 40%,transparent);}
+.hero-content{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:0 3rem;width:100%;}
+.hero-eyebrow{font-size:.72rem;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--accent);margin-bottom:1.25rem;display:flex;align-items:center;gap:.75rem;}.hero-eyebrow::before{content:'';width:40px;height:1px;background:var(--accent);}
+.hero-title{font-family:var(--heading);font-size:clamp(3rem,8vw,6.5rem);line-height:.95;letter-spacing:2px;margin-bottom:1.5rem;}.hero-title span{color:var(--accent);}
+.hero-sub{font-size:.95rem;color:#aaa;max-width:500px;line-height:1.7;margin-bottom:2.5rem;}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap;}
+.btn-gold{background:var(--accent);color:#000;padding:.85rem 2.5rem;font-size:.78rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:none;cursor:pointer;transition:all .2s;border-radius:2px;display:inline-block;}.btn-gold:hover{opacity:.9;transform:translateY(-2px);}
+.btn-ghost{background:transparent;color:#fff;padding:.85rem 2.5rem;font-size:.78rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:1px solid #444;cursor:pointer;transition:all .2s;border-radius:2px;display:inline-block;}.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.hero-stats{position:absolute;bottom:3rem;right:3rem;z-index:2;display:flex;gap:3rem;}.hero-stat{text-align:right;}.hero-stat-num{font-family:var(--heading);font-size:2.5rem;color:var(--accent);letter-spacing:1px;}.hero-stat-label{font-size:.68rem;color:#888;letter-spacing:2px;text-transform:uppercase;}
+.service-tiles{display:grid;grid-template-columns:repeat(4,1fr);height:280px;border-top:1px solid #1a1a1a;}
+.tile{position:relative;overflow:hidden;cursor:pointer;display:flex;align-items:flex-end;}.tile-bg{position:absolute;inset:0;background:#111;transition:transform .4s;}.tile-bg-img{position:absolute;inset:0;width:100%;height:100%;opacity:.4;transition:opacity .4s;}.tile:hover .tile-bg-img{opacity:.65;}.tile:hover .tile-bg{transform:scale(1.05);}
+.tile-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.85),transparent 60%);}
+.tile-content{position:relative;z-index:2;padding:1.5rem;}.tile-num{font-family:var(--heading);font-size:1.8rem;color:var(--accent);opacity:.4;margin-bottom:.25rem;}.tile-title{font-family:var(--heading);font-size:1.4rem;letter-spacing:1px;}.tile-arrow{font-size:.7rem;color:var(--accent);margin-top:.35rem;letter-spacing:1px;opacity:0;transform:translateX(-5px);transition:all .3s;}.tile:hover .tile-arrow{opacity:1;transform:translateX(0);}
+.tile+.tile{border-left:1px solid #1a1a1a;}
+.section{padding:6rem 3rem;}.section-inner{max-width:1100px;margin:0 auto;}
+.section-label{font-size:.68rem;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--accent);margin-bottom:.75rem;display:flex;align-items:center;gap:.75rem;}.section-label::before{content:'';width:30px;height:1px;background:var(--accent);}
+.section-title{font-family:var(--heading);font-size:clamp(2rem,5vw,3.8rem);line-height:1;letter-spacing:1px;margin-bottom:1.25rem;}
+.section-subtitle{color:#888;font-size:.9rem;line-height:1.7;max-width:600px;}
+.dark-bg{background:#111;}
+.services-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1px;background:#1a1a1a;margin-top:3rem;}
+.service-block{background:#111;padding:2.5rem;transition:background .2s;position:relative;overflow:hidden;}.service-block::before{content:'';position:absolute;left:0;top:0;width:3px;height:0;background:var(--accent);transition:height .3s;}.service-block:hover{background:#161616;}.service-block:hover::before{height:100%;}
+.service-block-icon{font-size:2rem;margin-bottom:1.25rem;}.service-block-title{font-family:var(--heading);font-size:1.5rem;letter-spacing:1px;margin-bottom:.75rem;}.service-block-desc{font-size:.85rem;color:#888;line-height:1.7;margin-bottom:1.25rem;}.service-block-price{font-size:.9rem;font-weight:700;color:var(--accent);}.service-block-link{font-size:.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-top:.75rem;display:inline-flex;align-items:center;gap:.4rem;transition:gap .2s;}.service-block:hover .service-block-link{gap:.7rem;}
+.about-split{display:grid;grid-template-columns:1fr 1fr;}.about-image-side{position:relative;min-height:500px;background:#111;overflow:hidden;}
+.about-image-placeholder{width:100%;height:100%;min-height:500px;background:linear-gradient(135deg,#111,#1a1a12);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#333;font-size:.8rem;letter-spacing:2px;text-transform:uppercase;}.about-image-placeholder .big-icon{font-size:4rem;margin-bottom:1rem;opacity:.3;}
+.about-text-side{padding:5rem;display:flex;flex-direction:column;justify-content:center;background:#111;}.about-text-side p{font-size:.9rem;color:#aaa;line-height:1.8;margin-bottom:1.25rem;}
+.ba-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1.5rem;margin-top:3rem;}
+.ba-card{background:#111;border:1px solid #1e1e1e;border-radius:4px;overflow:hidden;transition:transform .2s;border-top:2px solid var(--accent);}.ba-card:hover{transform:translateY(-4px);}
+.ba-photos{display:grid;grid-template-columns:1fr 1fr;gap:2px;}.ba-photo{position:relative;aspect-ratio:4/3;overflow:hidden;}.ba-photo img{width:100%;height:100%;object-fit:cover;}
+.ba-placeholder{width:100%;height:100%;aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;letter-spacing:2px;color:#333;}
+.ba-ph-before{background:#0e0e0e;}.ba-ph-after{background:#0e120e;}
+.ba-tag{position:absolute;top:.5rem;left:.5rem;font-size:.6rem;font-weight:700;letter-spacing:2px;padding:.2rem .5rem;border-radius:2px;}.ba-tag-before{background:#333;color:#aaa;}.ba-tag-after{background:#1a3a1a;color:#6db96d;}
+.ba-info{padding:1.25rem;}.ba-info h4{font-family:var(--heading);font-size:1.2rem;letter-spacing:1px;margin-bottom:.4rem;}.ba-info p{font-size:.8rem;color:#888;line-height:1.5;}
+.gallery-masonry{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-top:3rem;}
+.gallery-item{overflow:hidden;aspect-ratio:1;background:#111;position:relative;}.gallery-item img{width:100%;height:100%;object-fit:cover;transition:transform .4s;}.gallery-item:hover img{transform:scale(1.06);}
+.gallery-item.wide{grid-column:span 2;}.gallery-item.tall{grid-row:span 2;}
+.gallery-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;letter-spacing:2px;color:#222;text-transform:uppercase;background:#0f0f0f;border:1px dashed #1a1a1a;}
+.reviews-strip{background:#050505;padding:5rem 3rem;}.reviews-inner{max-width:1100px;margin:0 auto;}
+.reviews-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-top:3rem;}
+.review-card{background:#111;padding:2rem;border:1px solid #1e1e1e;position:relative;border-radius:3px;}.review-quote{position:absolute;top:1.25rem;right:1.5rem;font-size:3.5rem;font-family:Georgia,serif;color:var(--accent);opacity:.15;line-height:1;}
+.review-stars{color:var(--accent);font-size:.9rem;margin-bottom:1rem;letter-spacing:2px;}.review-text{font-size:.85rem;color:#aaa;line-height:1.7;margin-bottom:1.5rem;}
+.reviewer-row{display:flex;align-items:center;gap:.75rem;}.reviewer-ava{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0;}.reviewer-name{font-weight:700;font-size:.88rem;}.reviewer-meta{font-size:.75rem;color:#888;}
+.cta-band{background:var(--accent);padding:4rem 3rem;text-align:center;}.cta-band h2{font-family:var(--heading);font-size:clamp(2rem,5vw,3.5rem);color:#000;letter-spacing:2px;margin-bottom:.75rem;}.cta-band p{font-size:.9rem;color:rgba(0,0,0,.6);margin-bottom:2rem;}.btn-dark{background:#000;color:#fff;padding:.9rem 3rem;font-size:.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:none;cursor:pointer;border-radius:2px;display:inline-block;}
+.booking-section{background:#080808;padding:6rem 3rem;}.booking-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1.2fr;gap:5rem;align-items:start;}
+.contact-item{display:flex;gap:1rem;margin-bottom:1.5rem;align-items:flex-start;}.contact-icon{width:42px;height:42px;background:#111;border:1px solid #222;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}.contact-label{font-size:.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:.2rem;}.contact-val{font-size:.88rem;color:#ccc;line-height:1.5;}
+.booking-form-wrap{background:#0f0f0f;border:1px solid #1e1e1e;padding:2.5rem;border-radius:4px;}.form-title{font-family:var(--heading);font-size:1.6rem;letter-spacing:1px;margin-bottom:1.5rem;color:var(--accent);}
+.fg{margin-bottom:1rem;}.fg label{display:block;font-size:.68rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:.4rem;}.fg input,.fg select,.fg textarea{width:100%;background:#0a0a0a;border:1px solid #1e1e1e;color:#fff;padding:.7rem 1rem;font-size:.85rem;font-family:var(--body);border-radius:2px;outline:none;transition:border .2s;}.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent);}.fg select option{background:#0a0a0a;}.fg textarea{min-height:90px;resize:vertical;}.fg2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.submit-btn{width:100%;background:var(--accent);color:#000;border:none;padding:1rem;font-size:.78rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:var(--body);transition:opacity .2s;border-radius:2px;margin-top:.5rem;}.submit-btn:hover{opacity:.9;}
+.photo-band{display:grid;grid-template-columns:repeat(6,1fr);height:220px;}.photo-band-item{overflow:hidden;background:#111;}.photo-band-item img{width:100%;height:100%;object-fit:cover;opacity:.7;transition:all .4s;}.photo-band-item:hover img{transform:scale(1.08);opacity:1;}.photo-band-placeholder{background:#0d0d0d;border-right:1px solid #111;}
+footer{background:#030303;padding:4rem 3rem 2rem;border-top:1px solid #111;}.footer-inner{max-width:1100px;margin:0 auto;}.footer-top{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:3rem;margin-bottom:3rem;}.footer-brand{font-family:var(--heading);font-size:2rem;letter-spacing:2px;margin-bottom:.75rem;}.footer-brand span{color:var(--accent);}.footer-tagline{font-size:.8rem;color:#555;line-height:1.6;margin-bottom:1.5rem;}.footer-col h4{font-size:.68rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:1rem;}.footer-col ul{list-style:none;}.footer-col li{margin-bottom:.5rem;}.footer-col a{font-size:.82rem;color:#444;transition:color .2s;}.footer-col a:hover{color:var(--accent);}.footer-bottom{border-top:1px solid #111;padding-top:1.5rem;display:flex;justify-content:space-between;align-items:center;}.footer-copy{font-size:.75rem;color:#333;}.footer-socials{display:flex;gap:.75rem;}.footer-social{width:32px;height:32px;border:1px solid #1a1a1a;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:.75rem;color:#444;transition:all .2s;}.footer-social:hover{border-color:var(--accent);color:var(--accent);}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;align-items:center;justify-content:center;}.modal-overlay.active{display:flex;}.modal-box{background:#0f0f0f;border:1px solid #222;border-radius:6px;padding:3rem;text-align:center;max-width:420px;width:90%;}.modal-icon{font-size:3rem;margin-bottom:1rem;}.modal-box h3{font-family:var(--heading);font-size:2rem;letter-spacing:1px;margin-bottom:.5rem;color:var(--accent);}.modal-box p{font-size:.88rem;color:#888;margin-bottom:2rem;line-height:1.6;}.modal-close{background:var(--accent);color:#000;border:none;padding:.8rem 2.5rem;font-size:.78rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:var(--body);border-radius:2px;}
+.wa-float{position:fixed;bottom:1.5rem;right:1.5rem;width:56px;height:56px;background:#25d366;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(37,211,102,.35);z-index:500;font-size:1.5rem;}
+@media(max-width:900px){.topbar,.hero-stats{display:none;}nav{padding:0 1.5rem;}.hamburger{display:flex;}.nav-links{display:none;position:absolute;top:72px;left:0;right:0;background:#080808;flex-direction:column;padding:1.5rem;gap:1rem;border-bottom:1px solid #1a1a1a;}.nav-links.open{display:flex;}.service-tiles{grid-template-columns:1fr 1fr;}.about-split{grid-template-columns:1fr;}.booking-inner{grid-template-columns:1fr;}.footer-top{grid-template-columns:1fr 1fr;}.gallery-masonry{grid-template-columns:1fr 1fr;}.gallery-item.wide{grid-column:span 1;}.photo-band{grid-template-columns:repeat(3,1fr);}.section{padding:4rem 1.5rem;}}
+@media(max-width:600px){.service-tiles{grid-template-columns:1fr;}.hero-content{padding:0 1.5rem;}.ba-grid{grid-template-columns:1fr;}.footer-top{grid-template-columns:1fr;}.fg2{grid-template-columns:1fr;}.gallery-masonry{grid-template-columns:1fr;}.gallery-item.wide,.gallery-item.tall{grid-column:span 1;grid-row:span 1;}.photo-band{grid-template-columns:repeat(2,1fr);height:160px;}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="tel:${waNum}">${S.phone}</a>
+    <a href="mailto:${S.email}">${S.email}</a>
+    <span>Sun–Fri: ${S.weekday}</span>
+  </div>
+  <div class="topbar-right">
+    <a class="topbar-social" href="${S.fbUrl}" title="Facebook">f</a>
+    <a class="topbar-social" href="${S.igUrl}" title="Instagram">ig</a>
+    <a class="topbar-social" href="${S.ttUrl}" title="TikTok">tt</a>
+  </div>
+</div>
+<nav>
+  <div class="nav-logo">${S.logoPart1}<span>${S.logoPart2}</span></div>
+  <div class="hamburger" onclick="this.nextElementSibling.classList.toggle('open')"><span></span><span></span><span></span></div>
+  <ul class="nav-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#results">Results</a></li>
+    <li><a href="#gallery">Gallery</a></li>
+    <li><a href="#reviews">Reviews</a></li>
+    <li><a href="#booking" class="nav-book">${S.ctaPrimary}</a></li>
+  </ul>
+</nav>
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">${S.heroEyebrow}</div>
+    <h1 class="hero-title">${S.heroLine1}<br><span>${S.heroLine2}</span></h1>
+    <p class="hero-sub">${S.heroSub}</p>
+    <div class="hero-btns">
+      <a href="#booking" class="btn-gold">${S.ctaPrimary}</a>
+      <a href="#results" class="btn-ghost">${S.ctaSecondary}</a>
+    </div>
+  </div>
+  ${S.showStats?`<div class="hero-stats"><div class="hero-stat"><div class="hero-stat-num">${S.stat1Num}</div><div class="hero-stat-label">${S.stat1Label}</div></div><div class="hero-stat"><div class="hero-stat-num">${S.stat2Num}</div><div class="hero-stat-label">${S.stat2Label}</div></div><div class="hero-stat"><div class="hero-stat-num">${S.stat3Num}</div><div class="hero-stat-label">${S.stat3Label}</div></div></div>`:''}
+</section>
+<div class="service-tiles">
+  ${S.services.slice(0,4).map((s,i)=>`<div class="tile"><div class="tile-bg"><div class="tile-bg-img" style="background:linear-gradient(135deg,#1a1208,#0d0d0d)"></div></div><div class="tile-overlay"></div><div class="tile-content"><div class="tile-num">0${i+1}</div><div class="tile-title">${s.title}</div><div class="tile-arrow">→ LEARN MORE</div></div></div>`).join('')}
+</div>
+<section class="section dark-bg" id="services">
+  <div class="section-inner">
+    <div class="section-label">What We Offer</div>
+    <h2 class="section-title">Our Services</h2>
+    <p class="section-subtitle">Professional detailing packages crafted for every vehicle and every budget.</p>
+    <div class="services-grid">${servicesHTML}</div>
+  </div>
+</section>
+<div class="about-split">
+  <div class="about-image-side">${aboutImgHTML}</div>
+  <div class="about-text-side">
+    <div class="section-label">Who We Are</div>
+    <h2 class="section-title" style="font-size:2.8rem;">${S.aboutTitle}</h2>
+    <p>${S.aboutP1}</p><p>${S.aboutP2}</p>
+    <a href="#booking" class="btn-gold" style="align-self:flex-start;margin-top:.5rem">${S.aboutCta||'Get A Free Estimate'}</a>
+  </div>
+</div>
+<section class="section" id="results">
+  <div class="section-inner">
+    <div class="section-label">Proof Of Our Work</div>
+    <h2 class="section-title">Before & After</h2>
+    <p class="section-subtitle">Real transformations. Real customers.</p>
+    <div class="ba-grid">${baHTML}</div>
+  </div>
+</section>
+<div class="photo-band">${bandHTML}</div>
+<section class="section dark-bg" id="gallery">
+  <div class="section-inner">
+    <div class="section-label">Our Portfolio</div>
+    <h2 class="section-title">Finished Work</h2>
+    <p class="section-subtitle">Every car that leaves our shop tells the same story — perfection delivered.</p>
+    <div class="gallery-masonry">${galleryHTML}</div>
+  </div>
+</section>
+<div class="reviews-strip" id="reviews">
+  <div class="reviews-inner">
+    <div class="section-label">Customer Voice</div>
+    <h2 class="section-title">What Our Clients Say</h2>
+    <div class="reviews-grid">${reviewsHTML}</div>
+  </div>
+</div>
+<div class="cta-band">
+  <h2>Ready To Transform Your Vehicle?</h2>
+  <p>Book your appointment today and experience the difference.</p>
+  <a href="#booking" class="btn-dark">Schedule Today</a>
+</div>
+${S.showBooking?`<section class="booking-section" id="booking">
+  <div class="booking-inner">
+    <div>
+      <div class="section-label">Get In Touch</div>
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:3rem;letter-spacing:1px;margin-bottom:1.5rem;">Book An Appointment</h2>
+      <div class="contact-item"><div class="contact-icon">📍</div><div><div class="contact-label">Address</div><div class="contact-val">${S.address}</div></div></div>
+      <div class="contact-item"><div class="contact-icon">📞</div><div><div class="contact-label">Phone / WhatsApp</div><div class="contact-val">${S.phone}</div></div></div>
+      <div class="contact-item"><div class="contact-icon">🕐</div><div><div class="contact-label">Working Hours</div><div class="contact-val">Sun–Fri: ${S.weekday}<br>Saturday: ${S.saturday}</div></div></div>
+      <div class="contact-item"><div class="contact-icon">💳</div><div><div class="contact-label">Payment</div><div class="contact-val">${S.payment}</div></div></div>
+    </div>
+    <div class="booking-form-wrap">
+      <div class="form-title">Reserve Your Slot</div>
+      <div class="fg2"><div class="fg"><label>Name *</label><input id="b-name" placeholder="Full name"/></div><div class="fg"><label>Phone *</label><input id="b-phone" placeholder="${S.phone}"/></div></div>
+      <div class="fg2">
+        <div class="fg"><label>Service *</label><select id="b-service"><option value="">— Select —</option>${S.services.map(s=>`<option>${s.title}</option>`).join('')}</select></div>
+        <div class="fg"><label>Vehicle *</label><select id="b-vehicle"><option value="">— Select —</option><option>Hatchback</option><option>Sedan</option><option>SUV</option><option>Pickup / Jeep</option><option>Van</option><option>Motorcycle</option></select></div>
+      </div>
+      <div class="fg2"><div class="fg"><label>Date *</label><input type="date" id="b-date"/></div><div class="fg"><label>Time</label><select id="b-time"><option>8:00 AM</option><option>9:00 AM</option><option>10:00 AM</option><option>11:00 AM</option><option>12:00 PM</option><option>1:00 PM</option><option>2:00 PM</option><option>3:00 PM</option><option>4:00 PM</option></select></div></div>
+      <div class="fg"><label>Notes</label><textarea id="b-notes" placeholder="Car model, requests..."></textarea></div>
+      <button class="submit-btn" onclick="submitBooking()">Confirm Booking →</button>
+      <p style="font-size:.72rem;color:#333;text-align:center;margin-top:.75rem;">We'll confirm within 2 hours via call or Viber.</p>
+    </div>
+  </div>
+</section>`:''}
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div><div class="footer-brand">${S.logoPart1}<span>${S.logoPart2}</span></div><p class="footer-tagline">${S.footerTagline}</p><a href="#booking" class="btn-gold" style="font-size:.72rem;padding:.7rem 1.75rem;">${S.ctaPrimary}</a></div>
+      <div class="footer-col"><h4>Services</h4><ul>${S.services.map(s=>`<li><a href="#services">${s.title}</a></li>`).join('')}</ul></div>
+      <div class="footer-col"><h4>Quick Links</h4><ul><li><a href="#services">Services</a></li><li><a href="#results">Before & After</a></li><li><a href="#gallery">Gallery</a></li><li><a href="#reviews">Reviews</a></li><li><a href="#booking">Book Now</a></li></ul></div>
+      <div class="footer-col"><h4>Contact</h4><ul><li><a href="#">${S.address}</a></li><li><a href="tel:${waNum}">${S.phone}</a></li><li><a href="mailto:${S.email}">${S.email}</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><div class="footer-copy">© ${new Date().getFullYear()} ${S.name} · All Rights Reserved</div><div class="footer-socials"><a class="footer-social" href="${S.fbUrl}">f</a><a class="footer-social" href="${S.igUrl}">ig</a><a class="footer-social" href="${S.ttUrl}">tt</a></div></div>
+  </div>
+</footer>
+${waWidget}
+<div class="modal-overlay" id="modal"><div class="modal-box"><div class="modal-icon">✅</div><h3>Booking Confirmed!</h3><p>Thank you! We'll call or Viber you within 2 hours to confirm your slot.</p><button class="modal-close" onclick="document.getElementById('modal').classList.remove('active')">Perfect, Thanks</button></div></div>
+<script>
+function submitBooking(){
+  const n=document.getElementById('b-name').value.trim();
+  const p=document.getElementById('b-phone').value.trim();
+  const s=document.getElementById('b-service').value;
+  const v=document.getElementById('b-vehicle').value;
+  const d=document.getElementById('b-date').value;
+  if(!n||!p||!s||!v||!d){alert('Please fill all required fields.');return;}
+  document.getElementById('modal').classList.add('active');
+}
+document.getElementById('b-date')&&document.getElementById('b-date').setAttribute('min',new Date().toISOString().split('T')[0]);
+<\/script>
+</body>
+</html>`;
+}
+
+// ---- EXPORT ----
+function doExport(){
+  const S=collectData();
+  const html=generateHTML(S);
+  const blob=new Blob([html],{type:'text/html'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='autoshine-website.html';
+  a.click();
+  toast('✓ Website exported!');
+}
+
+// ---- PREVIEW ----
+function openPreview(){
+  const S=collectData();
+  const html=generateHTML(S);
+  const blob=new Blob([html],{type:'text/html'});
+  document.getElementById('preview-iframe').src=URL.createObjectURL(blob);
+  document.getElementById('preview-wrap').classList.add('open');
+}
+function closePreview(){
+  document.getElementById('preview-wrap').classList.remove('open');
+  document.getElementById('preview-iframe').src='';
+}
+
+// ---- INIT ----
+renderServices();renderBA();renderGallery();renderBand();renderReviews();renderTiles();
+</script>
+</body>
+</html>
